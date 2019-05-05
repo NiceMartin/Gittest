@@ -1,0 +1,3 @@
+hello, this a test
+At last, we utilize all of the K outputs by aver- aging the scores
+a probability distribution
