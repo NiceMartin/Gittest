@@ -1,0 +1,490 @@
+{
+ "cells": [
+  {
+   "cell_type": "code",
+   "execution_count": 9,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# code by Tae Hwan Jung(Jeff Jung) @graykode\n",
+    "import tensorflow as tf\n",
+    "import matplotlib.pyplot as plt\n",
+    "import numpy as np\n",
+    "\n",
+    "tf.reset_default_graph()\n",
+    "\n",
+    "import tensorflow.contrib.eager as tfe\n",
+    " \n",
+    "tf.enable_eager_execution()\n",
+    "# S: Symbol that shows starting of decoding input\n",
+    "# E: Symbol that shows starting of decoding output\n",
+    "# P: Symbol that will fill in blank sequence if current batch data size is short than time steps\n",
+    "sentences = ['ich mochte ein bier P', 'S i want a beer', 'i want a beer E']"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 10,
+   "metadata": {
+    "collapsed": true
+   },
+   "outputs": [],
+   "source": [
+    "word_list = \" \".join(sentences).split()\n",
+    "word_list = list(set(word_list))\n",
+    "word_dict = {w: i for i, w in enumerate(word_list)}\n",
+    "number_dict = {i: w for i, w in enumerate(word_list)}\n",
+    "n_class = len(word_dict)  # vocab list"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 11,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "['E', 'want', 'mochte', 'bier', 'ich', 'a', 'S', 'P', 'beer', 'ein', 'i']"
+      ]
+     },
+     "execution_count": 11,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "word_list"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 12,
+   "metadata": {
+    "collapsed": true
+   },
+   "outputs": [],
+   "source": [
+    "# Parameter\n",
+    "n_step = 5  # maxium number of words in one sentence(=number of time steps)\n",
+    "n_hidden = 128\n",
+    "\n",
+    "def make_batch(sentences):\n",
+    "    input_batch = [np.eye(n_class)[[word_dict[n] for n in sentences[0].split()]]]\n",
+    "    output_batch = [np.eye(n_class)[[word_dict[n] for n in sentences[1].split()]]]\n",
+    "    target_batch = [[word_dict[n] for n in sentences[2].split()]]\n",
+    "    return input_batch, output_batch, target_batch"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 13,
+   "metadata": {
+    "collapsed": true
+   },
+   "outputs": [],
+   "source": [
+    "input_batch, output_batch, target_batch=make_batch(sentences)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 14,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "[array([[0., 0., 0., 0., 1., 0., 0., 0., 0., 0., 0.],\n",
+      "       [0., 0., 1., 0., 0., 0., 0., 0., 0., 0., 0.],\n",
+      "       [0., 0., 0., 0., 0., 0., 0., 0., 0., 1., 0.],\n",
+      "       [0., 0., 0., 1., 0., 0., 0., 0., 0., 0., 0.],\n",
+      "       [0., 0., 0., 0., 0., 0., 0., 1., 0., 0., 0.]])]\n",
+      "[array([[0., 0., 0., 0., 0., 0., 1., 0., 0., 0., 0.],\n",
+      "       [0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 1.],\n",
+      "       [0., 1., 0., 0., 0., 0., 0., 0., 0., 0., 0.],\n",
+      "       [0., 0., 0., 0., 0., 1., 0., 0., 0., 0., 0.],\n",
+      "       [0., 0., 0., 0., 0., 0., 0., 0., 1., 0., 0.]])]\n",
+      "[[10, 1, 5, 8, 0]]\n"
+     ]
+    }
+   ],
+   "source": [
+    "print(input_batch)\n",
+    "print(output_batch)\n",
+    "print(target_batch)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 7,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "array([[1., 0., 0.],\n",
+       "       [0., 1., 0.],\n",
+       "       [0., 0., 1.]])"
+      ]
+     },
+     "execution_count": 7,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "np.eye(3)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 8,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "11"
+      ]
+     },
+     "execution_count": 8,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "n_class"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 15,
+   "metadata": {},
+   "outputs": [
+    {
+     "ename": "AttributeError",
+     "evalue": "'list' object has no attribute 'shape'",
+     "output_type": "error",
+     "traceback": [
+      "\u001b[0;31m---------------------------------------------------------------------------\u001b[0m",
+      "\u001b[0;31mAttributeError\u001b[0m                            Traceback (most recent call last)",
+      "\u001b[0;32m<ipython-input-15-12aa871597f7>\u001b[0m in \u001b[0;36m<module>\u001b[0;34m()\u001b[0m\n\u001b[0;32m----> 1\u001b[0;31m \u001b[0minput_batch\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0mshape\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[0m",
+      "\u001b[0;31mAttributeError\u001b[0m: 'list' object has no attribute 'shape'"
+     ]
+    }
+   ],
+   "source": [
+    "input_batch.shape"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 20,
+   "metadata": {
+    "collapsed": true
+   },
+   "outputs": [],
+   "source": [
+    "tf.reset_default_graph()\n",
+    "input=tf.random_normal([2,5,20])"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 47,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "TensorShape([Dimension(2), Dimension(5), Dimension(20)])"
+      ]
+     },
+     "execution_count": 47,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "input.shape"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 33,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "fw_cell = tf.nn.rnn_cell.LSTMCell(32)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 31,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "TensorShape([Dimension(2), Dimension(5), Dimension(32)])"
+      ]
+     },
+     "execution_count": 31,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "rnn_outputs.shape"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 35,
+   "metadata": {
+    "collapsed": true
+   },
+   "outputs": [],
+   "source": [
+    "rnn_outputs, _ = tf.nn.dynamic_rnn(inputs=input,cell=fw_cell,dtype=tf.float32)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 36,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "TensorShape([Dimension(2), Dimension(5), Dimension(32)])"
+      ]
+     },
+     "execution_count": 36,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "rnn_outputs.shape"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 49,
+   "metadata": {
+    "collapsed": true
+   },
+   "outputs": [],
+   "source": [
+    "cell=tf.nn.rnn_cell.MultiRNNCell([fw_cell]*1,state_is_tuple=True)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 50,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "<tensorflow.python.ops.rnn_cell_impl.MultiRNNCell at 0x131bc7518>"
+      ]
+     },
+     "execution_count": 50,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "cell"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 51,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "sequence_length=[3,4]\n",
+    "rnn_outputs2, _ = tf.nn.dynamic_rnn(inputs=input,cell=cell,dtype=tf.float32)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 41,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "<tf.Tensor: id=1042, shape=(32,), dtype=float32, numpy=\n",
+       "array([-0.00316478, -0.26618233, -0.20553705, -0.03665513,  0.03968972,\n",
+       "       -0.19958161, -0.18805854,  0.17260745, -0.19402012, -0.06626753,\n",
+       "       -0.03162451,  0.00106294, -0.07781729,  0.09954958, -0.37690908,\n",
+       "       -0.09322718,  0.07034995,  0.1086229 , -0.04249291, -0.21141568,\n",
+       "        0.06270514,  0.15846674, -0.15039694,  0.17904328, -0.18234845,\n",
+       "       -0.09080631,  0.06675084,  0.24642353, -0.07809392,  0.04753592,\n",
+       "        0.0164689 ,  0.23895872], dtype=float32)>"
+      ]
+     },
+     "execution_count": 41,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "rnn_outputs[0][4]"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 38,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "TensorShape([Dimension(2), Dimension(5), Dimension(32)])"
+      ]
+     },
+     "execution_count": 38,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "rnn_outputs2.shape"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 40,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "<tf.Tensor: id=1033, shape=(32,), dtype=float32, numpy=\n",
+       "array([0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.,\n",
+       "       0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.],\n",
+       "      dtype=float32)>"
+      ]
+     },
+     "execution_count": 40,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "rnn_outputs2[0][4]"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 52,
+   "metadata": {
+    "collapsed": true
+   },
+   "outputs": [],
+   "source": [
+    "import numpy as np"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 55,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "a=np.arange(6)\n",
+    "b=np.reshape(a,[2,3])"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 56,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "array([[0, 1, 2],\n",
+       "       [3, 4, 5]])"
+      ]
+     },
+     "execution_count": 56,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "b"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 58,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "c=np.split(b,3,axis=1)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 59,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "[array([[0],\n",
+       "        [3]]), array([[1],\n",
+       "        [4]]), array([[2],\n",
+       "        [5]])]"
+      ]
+     },
+     "execution_count": 59,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "c"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {
+    "collapsed": true
+   },
+   "outputs": [],
+   "source": []
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Python 3",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.6.1"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 2
+}
